@@ -1,0 +1,96 @@
+select 
+s."Id" as Siparis_Id ,
+b."FisNo" as Siparis_No,
+case when  s."TedarikSiparisTipi"=1 then 'Genel Sipariş' 
+     when  s."TedarikSiparisTipi"=2 then 'Ana Sipariş' 
+     when  s."TedarikSiparisTipi"=3 then 'Ek Sipariş' 
+     when  s."TedarikSiparisTipi"=4 then 'Özel Sipariş' 
+     when  s."TedarikSiparisTipi"=5 then 'Ön Sipariş' else null end as Siparis_Turu,
+     b."Tarih" as Siparis_Tarihi,
+     case when c."CompanyTypeId"=1 then 'Merkez'
+     when c."CompanyTypeId"=2 then 'Bölge'
+     when c."CompanyTypeId"=3 then 'Kooperatif' else null end as Siparis_Olusturan_Kurum ,
+c."Code" as kurum_no , 
+c."Name" AS KURUM_AD ,
+cp."Code" AS bolge_no,
+cp."Name" as bolge_ad,
+ca."Cunvan" AS Firma,
+grp."GroupCode" AS grupkodu,
+grp."Name" AS grup_adi,
+stk."Skodu" AS Stok_Kodu,
+stk."Saciklama" AS Stok_Adi,
+br."Isimi" As Birimi,
+s."TedarikAgr" AS Birim_agirlik,
+s."Gprice" AS Fiyat,
+s."Vadet" AS Miktar,
+s."KdvsizSatirTut" AS KdvHaricTutar,
+s."SatirTut"*(100.0 / "TedarikKarOrani") AS kar_oransiz_kdv_haric_tutar,
+s."Kdv" AS kdv_oran,
+s."TedarikKarOrani" AS kar_orani,
+s."KdvsizSatirTut" * (1+s."Kdv"/100.0) AS kdv_dahil_tutar,
+s."SatirTut" * (100.0 / s."TedarikKarOrani") * (1 + (s."Kdv" / 100.0)) kar_oransiz_kdv_dahil_tutar,
+b."TedarikTeslimAyi" AS teslim_ay,
+CASE b."TedarikTeslimAyi"
+    WHEN 1 THEN 'Ocak'    WHEN 2  THEN 'Şubat'   WHEN 3 THEN 'Mart'
+    WHEN 4 THEN 'Nisan'   WHEN 5  THEN 'Mayıs'   WHEN 6 THEN 'Haziran'
+    WHEN 7 THEN 'Temmuz'  WHEN 8  THEN 'Ağustos' WHEN 9 THEN 'Eylül'
+    WHEN 10 THEN 'Ekim'   WHEN 11 THEN 'Kasım'   WHEN 12 THEN 'Aralık'
+    ELSE 'Bilinmeyen Ay'  END AS Ay_Adi ,   
+    
+    
+    CASE s."TedarikStatus"
+    WHEN 1  THEN 'Bölge Birliği Değerlendirmesinde'
+    WHEN 2  THEN 'Bölge Birliği Tarafından Revize İstendi'
+    WHEN 3  THEN 'Bölge Birliği Tarafından Reddedildi'
+    WHEN 4  THEN 'Merkez Birliği Değerlendirmesinde'
+    WHEN 5  THEN 'Merkez Birliği Tarafından Revize İstendi'
+    WHEN 6  THEN 'Merkez Birliği Tarafından Reddedildi'
+    WHEN 7  THEN 'Firmaya İletildi'
+    WHEN 8  THEN 'Firma Tarafından Revize İstendi'
+    WHEN 9  THEN 'Firma Tarafından Onaylandı'
+    WHEN 10 THEN 'Sipariş Hazırlanıyor'
+    WHEN 11 THEN 'Sipariş Taşıma Durumunda'
+    WHEN 12 THEN 'Sipariş Teslim Edildi'
+    ELSE 'Bilinmeyen Ay'
+    END AS Siparis_Durum_Bilgisi,
+ 
+    CASE b."TedarikciSiparisDurum"
+    WHEN 0 then 'Sipariş Oluşturuldu' 
+    WHEN 1 then 'Firmaya iletildi'
+    WHEN 2 then 'Firma Tarafından Onaylandı'
+    WHEN 3 then 'Firma Tarafından Revize İstendi'
+    WHEN 4 then 'Firma Tarafından Reddedildi'
+    WHEN 5 then 'Sipariş Hazırlanıyor'
+    WHEN 6 then 'İrsaliye Kesildi'
+    WHEN 7 then 'Fatura Kesildi'
+    WHEN 8 then 'Sipariş Tamamlandı'
+    WHEN 9 then 'Sipariş Iptal Edildi'
+    WHEN 98 then 'Hatalı Sipariş'
+    WHEN 99 then 'Siparişin İletiminde Hata Oluştu' ELSE 'Bilinmeyen Kayıt' END AS TEDARIKCI_SIPARIS_DURUM,
+    
+    CASE s."TedarikPlaceOfDeliveryType"
+    WHEN 1 THEN 'Ortağın adresine teslim edilecek'
+    WHEN 2 THEN 'Kooperatif deposuna teslim edilecek'
+    WHEN 3 THEN 'Farklı bir adrese teslimat yapılacak'
+    WHEN 4 THEN 'Tedarikçi deposundan teslim alınacak' ELSE 'Bilinmeyen Kayit' END AS TESLIM_YERI,
+    
+    p."Name" AS IL , dis."Name" AS ILCE , 
+    s."TedarikWrittenAdress" AS SevkAdres,
+    CASE s."TedarikIsJobWork" WHEN 1 THEN 'Evet' ELSE 'Hayır' end as Job_mi ,
+    CASE b."TedarikWhoPlacedOrder" 
+    WHEN 1 THEN  'Kooparatif' 
+    WHEN 2 THEN  'Bölge Birliği' 
+    WHEN 3 THEN  'Merkez Birliği' 
+    WHEN 4 THEN  'Firma' 
+    WHEN 8 THEN  'Sistem' else 'Bilinmeyen Durum' end as Istasyon_Bilgisi
+from "FLERPI"."Satir" s 
+LEFT OUTER join   "FLERPI"."Baslik" b on   s."SipBasId" = b."Id" AND s."IsDeleted" = 0 AND b."IsDeleted" = 0
+Join  "FLERPI"."Company" c on  b."CompanyId"=c."Id"  AND c."IsDeleted" = 0  
+Join  "FLERPI"."Company" cp on  c."ParentId" = cp."Id" AND cp."IsDeleted" = 0  
+Join  "FLERPI"."Stok" stk on   s."StkId" = stk."Sid" AND stk."IsDeleted" = 0 
+Join  "FLERPI"."ProductGroup" grp on   stk."ProductGroupId" = grp."Id" AND grp."IsDeleted" = 0 
+LEFT OUTER join "FLERPI"."Cari" ca on   stk."TedChId" = ca."ChId"AND ca."IsDeleted" = 0  
+LEFT OUTER join "FLERPI"."Birimler" br on   stk."BrmId" = br."BrmId" AND br."IsDeleted" = 0  
+LEFT OUTER join "FLERPI"."Province" p ON s."TedarikProvinceId" =p."Id" AND p."IsDeleted" = 0  
+LEFT OUTER JOIN "FLERPI"."District" dis ON   s."TedarikDistrictId" =dis."Id" AND dis."IsDeleted" = 0 
+ORDER BY b."Tarih" desc
