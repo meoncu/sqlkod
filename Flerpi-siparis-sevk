@@ -1,0 +1,43 @@
+/*SEVK*/
+SELECT
+    b."FisNo" ,
+	s."Id" ,
+	ssd."SiparisId" ,
+	b."TedarikTalepEdenCompanyId" AS Kurum_Id,
+	c."Code" AS Kurum_no ,
+	c."Name" AS Kurum_Ad ,
+	ssd."Miktar" AS SevkMiktar ,
+	ssd."IrsaliyeTarihi" AS SevkTarihi ,
+	ssd."StokKodu"
+FROM
+	"FLERPI"."SiparisSevkDetay" ssd ,
+	"FLERPI"."Baslik" b ,
+	"FLERPI"."Satir" s ,
+	"FLERPI"."Company" c
+WHERE
+	ssd."SiparisId" = b."TedarikFinalFisNo"
+	AND ssd."SiparisId" = s."Id"
+	AND b."TedarikTalepEdenCompanyId" = c."Id"
+	AND ssd."IsDeleted" = 0
+	AND b."IsDeleted" = 0
+	AND s."IsDeleted" = 0
+	AND b."TedarikTalepEdenCompanyId" = '1670'
+	AND b."CompanyId" ='1670'
+  AND  ssd."StokKodu"  = '38'
+
+38 , 51 ,52
+/*SİPARİŞLER*/
+SELECT  b."TedarikFinalFisNo"  ,b."Tarih",b."TedarikTeslimAyi" ,s."Gadet" , c."Code"  , c."Name" ,stk."Skodu" /*, 	,b."CompanyId" b."FisNo"  , b."Durumu" ,b."TedarikWhoPlacedOrder" , b."Gc" ,b."Status"  b.*/
+FROM
+	"FLERPI"."Baslik" b  
+	 LEFT JOIN "FLERPI"."Satir" s    ON 	b."Id" = s."SipBasId"
+    LEFT JOIN "FLERPI"."Company" c    ON	b."TedarikTalepEdenCompanyId" = c."Id"
+    LEFT JOIN  "FLERPI"."Stok" stk on   s."StkId" = stk."Sid" AND stk."IsDeleted" = 0
+WHERE
+ 	  b."IsDeleted" = 0
+	AND s."IsDeleted" = 0
+    AND b."TedarikTalepEdenCompanyId" = '1670'
+	AND b."CompanyId" ='1670'
+AND  stk."Skodu"  = '51'
+    AND b."TedarikciSiparisDurum" IN (1,2)
+       ;
