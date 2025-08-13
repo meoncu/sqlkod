@@ -1,0 +1,30 @@
+SELECT
+    b."TedarikFinalFisNo",
+    b."Tarih" AS Siparis_Tarihi,
+    MAX(s."Gadet") AS Siparis_Miktar,
+    SUM(COALESCE(ssd."Miktar", 0)) AS Toplam_SevkMiktar,
+    MAX(ssd."IrsaliyeTarihi") AS Max_SevkTarihi ,
+    c."Code" AS Code,
+    c."Name" AS Name,
+    stk."Skodu" AS Skodu,
+    b."TedarikTeslimAyi" AS TedarikTeslimAyi
+
+FROM "FLERPI"."Baslik" b
+LEFT JOIN "FLERPI"."Satir" s     ON b."Id" = s."SipBasId"
+LEFT JOIN "FLERPI"."Company" c      ON b."TedarikTalepEdenCompanyId" = c."Id"
+LEFT JOIN "FLERPI"."Stok" stk      ON s."StkId" = stk."Sid"
+LEFT JOIN "FLERPI"."SiparisSevkDetay" ssd      ON ssd."SiparisId" = b."TedarikFinalFisNo"
+    
+WHERE
+    stk."IsDeleted" = 0 
+    AND (ssd."IsDeleted" = 0 OR  ssd."IsDeleted" IS NULL)
+    AND b."IsDeleted" = 0
+    AND s."IsDeleted" = 0
+    AND b."TedarikTalepEdenCompanyId" = '1670'
+    AND b."CompanyId" = '1670'
+    AND stk."Skodu" = '38'
+    AND b."TedarikciSiparisDurum" IN (1, 2)
+GROUP BY
+    b."TedarikFinalFisNo",b."Tarih", c."Code",c."Name",stk."Skodu",b."TedarikTeslimAyi"
+ORDER BY
+    b."TedarikFinalFisNo"
